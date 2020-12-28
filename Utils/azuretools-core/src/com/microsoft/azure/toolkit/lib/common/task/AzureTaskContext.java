@@ -108,15 +108,10 @@ public abstract class AzureTaskContext {
             return null;
         }
 
-        void clearOperations() {
-            this.operations.clear();
-        }
-
         Node derive() {
             final long threadId = Thread.currentThread().getId();
             final Node current = AzureTaskContext.current();
             assert this == current : String.format("[threadId:%s] deriving context from context[%s] in context[%s].", threadId, this, current);
-            assert !this.disposed : String.format("[threadId:%s] deriving from a disposed context[%s]", threadId, this);
             this.threadId = this.threadId > 0 ? this.threadId : threadId;
             final Snapshot snapshot = new Snapshot(this);
             return new Node(snapshot);
@@ -125,7 +120,6 @@ public abstract class AzureTaskContext {
         private void setup() {
             final Node current = AzureTaskContext.current();
             final long threadId = Thread.currentThread().getId();
-            assert this.threadId < 0 && !this.disposed : String.format("[threadId:%s] context[%s] already setup/disposed", threadId, this);
             this.threadId = threadId;
             if (this.threadId == current.threadId) {
                 this.parent = current;
@@ -140,7 +134,6 @@ public abstract class AzureTaskContext {
             final Node current = AzureTaskContext.current();
             final long threadId = Thread.currentThread().getId();
             assert this == current && this.threadId == threadId : String.format("[threadId:%s] disposing context[%s] in context[%s].", threadId, this, current);
-            assert !this.disposed : String.format("[threadId:%s] disposing a disposed context[%s].", threadId, this);
             this.disposed = true;
             if (this.threadId == this.parent.threadId) {
                 // log.info(String.format("[threadId:%s] disposing IN-THREAD context[%s]", threadId, this));
